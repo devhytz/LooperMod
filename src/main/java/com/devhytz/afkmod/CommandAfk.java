@@ -71,7 +71,7 @@ public class CommandAfk extends CommandBase {
 
                         if (mc.currentScreen instanceof GuiContainer) {
                             GuiContainer gui = (GuiContainer) mc.currentScreen;
-                            int[] quartzSlots = {0, 1, 2};
+                            int[] quartzSlots = {0, 1};
                             int chosen = quartzSlots[(int)(Math.random() * quartzSlots.length)];
                             mc.playerController.windowClick(gui.inventorySlots.windowId, chosen, 0, 0, mc.thePlayer);
                             Thread.sleep(1000);
