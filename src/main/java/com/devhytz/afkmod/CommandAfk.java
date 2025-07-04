@@ -44,6 +44,8 @@ public class CommandAfk extends CommandBase {
                     player.sendChatMessage("/lobby classic");
                     Thread.sleep(2500);
 
+                    int toggle = 0;
+
                     while (running) {
                         if (mc.gameSettings.keyBindSneak.isKeyDown()) {
                             player.addChatMessage(new ChatComponentText("AFK mode deactivated (Shift pressed)."));
@@ -71,8 +73,11 @@ public class CommandAfk extends CommandBase {
 
                         if (mc.currentScreen instanceof GuiContainer) {
                             GuiContainer gui = (GuiContainer) mc.currentScreen;
+
                             int[] quartzSlots = {0, 1};
-                            int chosen = quartzSlots[(int)(Math.random() * quartzSlots.length)];
+                            int chosen = quartzSlots[toggle % 2];
+                            toggle++;
+
                             mc.playerController.windowClick(gui.inventorySlots.windowId, chosen, 0, 0, mc.thePlayer);
                             Thread.sleep(1000);
                         }
