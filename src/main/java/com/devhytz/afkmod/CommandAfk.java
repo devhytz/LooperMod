@@ -54,20 +54,20 @@ public class CommandAfk extends CommandBase {
                         }
 
                         mc.thePlayer.inventory.currentItem = 5;
-                        Thread.sleep(300);
+                        Thread.sleep(100);
 
                         KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
-                        Thread.sleep(500);
+                        Thread.sleep(100);
 
                         mc.thePlayer.inventory.currentItem = 8;
-                        Thread.sleep(400);
+                        Thread.sleep(100);
 
                         KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
-                        Thread.sleep(800);
+                        Thread.sleep(100);
 
                         int attempts = 0;
                         while (!(mc.currentScreen instanceof GuiContainer) && attempts < 10) {
-                            Thread.sleep(200);
+                            Thread.sleep(100);
                             attempts++;
                         }
 
@@ -83,7 +83,7 @@ public class CommandAfk extends CommandBase {
                         }
 
                         mc.displayGuiScreen(null);
-                        Thread.sleep(1000);
+                        Thread.sleep(100);
                     }
 
                 } catch (InterruptedException e) {
