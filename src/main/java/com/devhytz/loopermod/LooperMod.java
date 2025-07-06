@@ -28,6 +28,7 @@ public class LooperMod {
         MinecraftForge.EVENT_BUS.register(this);
     }
 
+    //try
     @EventHandler
     public void init(FMLInitializationEvent event) {
         ClientCommandHandler.instance.registerCommand(new CommandFeedPets());
