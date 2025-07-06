@@ -1,4 +1,4 @@
-package com.devhytz.afkmod;
+package com.devhytz.loopermod;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -8,7 +8,7 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 
-public class CommandAfk extends CommandBase {
+public class FeedPetsMod extends CommandBase {
 
     private boolean running = false;
 

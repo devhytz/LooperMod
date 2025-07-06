@@ -1,7 +1,7 @@
 [{
-  "modid": "afkmod",
-  "name": "AFK Automation Mod",
-  "description": "Afk",
+  "modid": "loopermod",
+  "name": "LooperMod",
+  "description": "Loop to feed pets",
   "version": "1.0",
   "mcversion": "1.8.9",
   "authorList": ["Devhytz"],
