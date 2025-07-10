@@ -18,6 +18,15 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.lang.reflect.Type;
+import java.util.Map;
+
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,129 +44,24 @@ public class LooperMod {
 
     private void cargarMascotas() {
         mascotas.clear();
-        mascotas.put("silverfish", new int[]{11, 27, 33});
-        mascotas.put("cat_black", new int[]{12, 28, 34});
-        mascotas.put("cat_red", new int[]{12, 28, 34});
-        mascotas.put("cat_siamese", new int[]{12, 28, 34}); //-------------
-        mascotas.put("cat_black_baby", new int[]{11, 28, 35});
-        mascotas.put("cat_red_baby", new int[]{11, 28, 35});
-        mascotas.put("cat_siamese_baby", new int[]{11, 28, 35});
-        mascotas.put("wild_ocelot", new int[]{12, 28, 34});
-        mascotas.put("wild_ocelot_baby", new int[]{12, 28, 35}); //------------
-        mascotas.put("wolf", new int[]{15, 27, 35 });
-        mascotas.put("wolf_baby", new int[]{10, 28, 34});
-        mascotas.put("bat", new int[]{1, 27, 34});
-        mascotas.put("villager_blacksmith", new int[]{14, 29, 44});
-        mascotas.put("villager_blacksmith_baby", new int[]{2, 29, 34});
-        mascotas.put("villager_butcher", new int[]{14, 29, 44});
-        mascotas.put("villager_butcher_baby", new int[]{10, 28, 34});
-        mascotas.put("villager_farmer", new int[]{4, 28, 42});
-        mascotas.put("villager_farmer_baby", new int[]{11, 28, 33});
-        mascotas.put("villager_librarian", new int[]{0, 27, 43}); //-----
-        mascotas.put("villager_librarian_baby", new int[]{10, 28, 42});
-        mascotas.put("villager_priest", new int[]{9, 27, 43});
-        mascotas.put("villager_priest_baby", new int[]{11, 28, 42});
-        mascotas.put("zombie_villager", new int[]{16, 29, 44});
-        mascotas.put("witch", new int[]{2, 28, 42});
-        mascotas.put("zombie", new int[]{16, 29,44});
-        mascotas.put("zombie_baby", new int[]{11, 28, 44});
-        mascotas.put("frozen_zombie", new int[]{16, 27, 33});
-        mascotas.put("growing_zombie", new int[]{16, 27, 33});
-        mascotas.put("red_helper", new int[]{10, 28, 43});
-        mascotas.put("green_helper", new int[]{11, 28, 34}); //-----
-        mascotas.put("snowman", new int[]{3, 27, 33});
-        mascotas.put("herobrine", new int[]{10, 28, 44});
-        mascotas.put("endermite", new int[]{11, 29, 44});
-        mascotas.put("mini_wither", new int[]{16, 29, 44});
-        mascotas.put("bee", new int[]{6, 27, 34});
-        mascotas.put("spider", new int[]{16, 27, 35});
-        mascotas.put("cave_spider", new int[]{14, 27, 44});
-        mascotas.put("bouncy_spider", new int[]{14, 27, 44});
-        mascotas.put("snowman_jockey", new int[]{3, 27, 33});
-        mascotas.put("chicken", new int[]{6, 27, 43});
-        mascotas.put("chicken_baby", new int[]{10, 28, 33}); //--------
-        mascotas.put("cow", new int[]{8, 28, 42});
-        mascotas.put("cow_baby", new int[]{10, 28, 34});
-        mascotas.put("mooshroom", new int[]{5, 28,42});
-        mascotas.put("mooshroom_baby", new int[]{10, 28, 42});
-        mascotas.put("creeper", new int[]{11, 29, 35});
-        mascotas.put("creeper_powered", new int[]{11, 29, 44});
-        mascotas.put("horse_black", new int[]{0, 27, 35});
-        mascotas.put("horse_brown", new int[]{0, 27, 35});
-        mascotas.put("horse_chestnut", new int[]{0, 27, 35});
-        mascotas.put("horse_dark_brown", new int[]{0, 27, 35});
-        mascotas.put("horse_grey", new int[]{0, 27, 35}); //---------
-        mascotas.put("horse_creamy", new int[]{0, 27, 35});
-        mascotas.put("horse_white", new int[]{0, 27, 35});
-        mascotas.put("brown_horse_baby", new int[]{11, 28, 35});
-        mascotas.put("horse_chestnut_baby", new int[]{11, 28, 35});
-        mascotas.put("horse_dark_brown_baby", new int[]{11, 28, 35});
-        mascotas.put("horse_creamy_baby",new int[]{11, 28, 35});
-        mascotas.put("horse_gray_baby", new int[]{11, 28, 35});
-        mascotas.put("horse_undead", new int[]{16, 29, 33});
-        mascotas.put("mule", new int[]{7, 27, 35});
-        mascotas.put("donkey",  new int[]{7, 27, 35});
-        mascotas.put("black_rabbit", new int[]{3, 27, 33}); //------------
-        mascotas.put("black_white_rabbit", new int[]{3, 27, 34});
-        mascotas.put("brown_rabbit", new int[]{3, 27, 33});
-        mascotas.put("gold_rabbit", new int[]{3, 27, 34});
-        mascotas.put("salt_pepper_rabbit", new int[]{3, 27, 34});
-        mascotas.put("white_rabbit", new int[]{3, 27, 33});
-        mascotas.put("rabbit_jockey", new int[]{3, 27, 33});
-        mascotas.put("pig", new int[]{0, 28, 43});
-        mascotas.put("pig_baby", new int[]{0, 28, 35});
-        mascotas.put("pig_zombie", new int[]{1, 29, 43});
-        mascotas.put("pig_zombie_baby", new int[]{10, 28, 44});
-        mascotas.put("sheep_black", new int[]{8, 27, 35}); //---------
-        mascotas.put("sheep_white", new int[]{8, 27, 35});
-        mascotas.put("sheep_gray", new int[]{8, 27, 35});
-        mascotas.put("sheep_brown", new int[]{8, 27, 35});
-        mascotas.put("sheep_silver", new int[]{8, 27, 35});
-        mascotas.put("sheep_orange", new int[]{8, 27, 35});
-        mascotas.put("sheep_magenta", new int[]{8, 27, 35});
-        mascotas.put("sheep_light_blue", new int[]{8, 27, 35});
-        mascotas.put("sheep_yellow", new int[]{8, 27, 35});
-        mascotas.put("sheep_lime", new int[]{8, 27, 35});
-        mascotas.put("sheep_cyan",new int[]{8, 27, 35});
-        mascotas.put("sheep_purple", new int[]{8, 27, 35});
-        mascotas.put("sheep_blue", new int[]{8, 27, 35});
-        mascotas.put("sheep_green", new int[]{8, 27, 35});
-        mascotas.put("sheep_red", new int[]{8, 27, 35});
-        mascotas.put("sheep_pink", new int[]{8, 27, 35});
-        mascotas.put("sheep_rainbow", new int[]{8, 27, 35}); //----------
-        mascotas.put("merry_sheep", new int[]{1, 28, 43});
-        mascotas.put("pastel_sheep", new int[]{1, 28, 43});
-        mascotas.put("sheep_black_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_white_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_gray_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_brown_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_silver_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_orange_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_magenta_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_light_blue_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_yellow_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_lime_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_cyan_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_purple_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_blue_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_green_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_red_baby", new int[]{1, 28, 43});
-        mascotas.put("sheep_pink_baby", new int[]{1, 28, 43}); //--------------
-        mascotas.put("slime_big", new int[]{15, 28, 34});
-        mascotas.put("slime_small", new int[]{6, 28, 33});
-        mascotas.put("slime_tiny", new int[]{12, 28, 43});
-        mascotas.put("magma_cube_big", new int[]{17, 29, 42});
-        mascotas.put("magma_cube_small", new int[]{17, 29, 34});
-        mascotas.put("magma_cube_tiny", new int[]{17, 28, 43});
-        mascotas.put("skeleton", new int[]{16, 29, 43});
-        mascotas.put("frozen_skeleton", new int[]{15, 27, 34});
-        mascotas.put("smoldering_skeleton", new int[]{15, 27, 33});
-        mascotas.put("fish", new int[]{12, 27, 33});
-        mascotas.put("hay_bale", new int[]{8, 28, 33}); //-----------------
-        mascotas.put("enderman", new int[]{4, 28, 34});
-        mascotas.put("iron_golem", new int[]{6, 29, 34});
-        mascotas.put("iron_golem_rose", new int[]{6, 29, 34});
+
+        try (Reader reader = new InputStreamReader(
+                getClass().getClassLoader().getResourceAsStream("config/pets.json"),
+                StandardCharsets.UTF_8)) {
+
+            Gson gson = new Gson();
+            Type type = new TypeToken<Map<String, int[]>>() {}.getType();
+            Map<String, int[]> data = gson.fromJson(reader, type);
+
+            if (data != null) {
+                mascotas.putAll(data);
+            }
+        } catch (IOException | NullPointerException e) {
+            e.printStackTrace(); // Si no lo encuentra, da NullPointerException
+        }
     }
+
+
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -183,7 +87,7 @@ public class LooperMod {
 
                 new Thread(() -> {
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(500); // Velocidad GUI
                         mc.addScheduledTask(() -> {
                             mc.playerController.windowClick(
                                     chest.inventorySlots.windowId,
