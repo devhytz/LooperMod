@@ -102,16 +102,18 @@ public class LooperMod {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
 
-        boolean isSpacePressed = Keyboard.isKeyDown(Keyboard.KEY_SPACE);
-        if (isSpacePressed && !spacePressedBefore) {
+        boolean isShiftPressed = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+
+        if (isShiftPressed && !spacePressedBefore) {
             spacePressedBefore = true;
+
             if (shouldFeed && feedThread != null && feedThread.isAlive()) {
                 feedThread.interrupt();
                 feedThread = null;
                 shouldFeed = false;
                 mc.thePlayer.closeScreen();
             }
-        } else if (!isSpacePressed) {
+        } else if (!isShiftPressed) {
             spacePressedBefore = false;
         }
     }
