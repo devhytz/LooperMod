@@ -25,10 +25,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.lang.reflect.Type;
 import java.util.Map;
-
-
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mod(modid = "loopermod", name = "LooperMod", version = "1.0")
@@ -57,11 +54,9 @@ public class LooperMod {
                 mascotas.putAll(data);
             }
         } catch (IOException | NullPointerException e) {
-            e.printStackTrace(); // Si no lo encuentra, da NullPointerException
+            e.printStackTrace();
         }
     }
-
-
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -87,7 +82,7 @@ public class LooperMod {
 
                 new Thread(() -> {
                     try {
-                        Thread.sleep(500); // Velocidad GUI
+                        Thread.sleep(400); // Reducido 250ms
                         mc.addScheduledTask(() -> {
                             mc.playerController.windowClick(
                                     chest.inventorySlots.windowId,
@@ -99,7 +94,7 @@ public class LooperMod {
 
                             new Thread(() -> {
                                 try {
-                                    Thread.sleep(1500);
+                                    Thread.sleep(1050); // Reducido 250ms
                                     mc.addScheduledTask(() -> mc.thePlayer.closeScreen());
                                 } catch (InterruptedException ignored) {}
                             }).start();
@@ -120,12 +115,9 @@ public class LooperMod {
             spacePressedBefore = true;
 
             if (shouldFeed && feedThread != null && feedThread.isAlive()) {
-
                 feedThread.interrupt();
                 feedThread = null;
                 shouldFeed = false;
-
-
                 mc.thePlayer.closeScreen();
             }
         } else if (!isSpacePressed) {
@@ -155,15 +147,54 @@ public class LooperMod {
                             intentos++;
                         }
 
-                        Thread.sleep(3500);
+                        Thread.sleep(3300);
                     }
 
                     Thread.sleep(1000);
                 }
+
+                // Lógica después de alimentar
+                ejecutarSecuenciaPostAlimentacion();
+
             } catch (InterruptedException ignored) {}
         });
 
         feedThread.start();
+    }
+
+    private void ejecutarSecuenciaPostAlimentacion() {
+        mc.addScheduledTask(() -> {
+            int cofreSlotHotbar = 4; // Ajusta según tu inventario
+            mc.thePlayer.inventory.currentItem = cofreSlotHotbar;
+            mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.getHeldItem());
+
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1000); // Espera para abrir la GUI del cofre
+
+                    mc.addScheduledTask(() -> mc.playerController.windowClick(
+                            mc.thePlayer.openContainer.windowId,
+                            9,
+                            0, // clic derecho
+                            0,
+                            mc.thePlayer
+                    ));
+
+                    Thread.sleep(2000);
+
+                    mc.addScheduledTask(() -> mc.playerController.windowClick(
+                            mc.thePlayer.openContainer.windowId,
+                            45,
+                            0, // clic derecho
+                            0,
+                            mc.thePlayer
+                    ));
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        });
     }
 
     public class CommandFeedPets extends CommandBase {
