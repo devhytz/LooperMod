@@ -6,6 +6,7 @@ import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -14,6 +15,8 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.input.Keyboard;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,6 +31,7 @@ public class LooperMod {
     private final AtomicBoolean guiReady = new AtomicBoolean(false);
     private final LinkedHashMap<String, int[]> mascotas = new LinkedHashMap<>();
     private int currentSlot = -1;
+    private boolean spacePressedBefore = false;
 
     private void cargarMascotas() {
         mascotas.clear();
@@ -163,7 +167,6 @@ public class LooperMod {
     @EventHandler
     public void init(FMLInitializationEvent event) {
         ClientCommandHandler.instance.registerCommand(new CommandFeedPets());
-        ClientCommandHandler.instance.registerCommand(new CommandStopFeed());
     }
 
     @SubscribeEvent
@@ -178,46 +181,53 @@ public class LooperMod {
                 guiReady.set(true);
                 final int slotToClick = currentSlot;
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(500);
-                            mc.addScheduledTask(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mc.playerController.windowClick(
-                                            chest.inventorySlots.windowId,
-                                            slotToClick,
-                                            0,
-                                            0,
-                                            mc.thePlayer
-                                    );
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(500);
+                        mc.addScheduledTask(() -> {
+                            mc.playerController.windowClick(
+                                    chest.inventorySlots.windowId,
+                                    slotToClick,
+                                    0, // clic izquierdo
+                                    0,
+                                    mc.thePlayer
+                            );
 
-                                    new Thread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            try {
-                                                Thread.sleep(2300);
-                                                mc.addScheduledTask(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        mc.thePlayer.closeScreen();
-                                                    }
-                                                });
-                                            } catch (InterruptedException ignored) {}
-                                        }
-                                    }).start();
-                                }
-                            });
-                        } catch (InterruptedException ignored) {}
-                    }
+                            new Thread(() -> {
+                                try {
+                                    Thread.sleep(1500);
+                                    mc.addScheduledTask(() -> mc.thePlayer.closeScreen());
+                                } catch (InterruptedException ignored) {}
+                            }).start();
+                        });
+                    } catch (InterruptedException ignored) {}
                 }).start();
             }
         }
     }
 
-    private int modoFeed = 1;
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        boolean isSpacePressed = Keyboard.isKeyDown(Keyboard.KEY_SPACE);
+
+        if (isSpacePressed && !spacePressedBefore) {
+            spacePressedBefore = true;
+
+            if (shouldFeed && feedThread != null && feedThread.isAlive()) {
+
+                feedThread.interrupt();
+                feedThread = null;
+                shouldFeed = false;
+
+
+                mc.thePlayer.closeScreen();
+            }
+        } else if (!isSpacePressed) {
+            spacePressedBefore = false;
+        }
+    }
 
     private void alimentarMascotas() {
         feedThread = new Thread(() -> {
@@ -228,56 +238,27 @@ public class LooperMod {
                     String nombreMascota = entry.getKey();
                     int[] slots = entry.getValue();
 
-                    if (modoFeed == 3) {
-                        for (int slot : slots) {
-                            currentSlot = slot;
-                            guiReady.set(false);
-                            mc.thePlayer.sendChatMessage("/purchasepet " + nombreMascota);
+                    for (int slot : slots) {
+                        if (Thread.currentThread().isInterrupted()) return;
 
-                            int intentos = 0;
-                            while (!guiReady.get() && intentos < 100) {
-                                Thread.sleep(100);
-                                intentos++;
-                            }
+                        currentSlot = slot;
+                        guiReady.set(false);
+                        mc.thePlayer.sendChatMessage("/purchasepet " + nombreMascota);
 
-                            Thread.sleep(5000);
-
-                            for (int i = 0; i < 3; i++) {
-                                final int clickSlot = slot;
-                                mc.addScheduledTask(() -> {
-                                    mc.playerController.windowClick(
-                                            mc.thePlayer.openContainer.windowId,
-                                            clickSlot,
-                                            0,
-                                            0,
-                                            mc.thePlayer
-                                    );
-                                });
-                                Thread.sleep(800);
-                            }
-
-                            mc.addScheduledTask(() -> mc.thePlayer.closeScreen());
-                            Thread.sleep(1000);
+                        int intentos = 0;
+                        while (!guiReady.get() && intentos < 100) {
+                            Thread.sleep(100);
+                            intentos++;
                         }
-                    } else {
-                        for (int slot : slots) {
-                            currentSlot = slot;
-                            guiReady.set(false);
-                            mc.thePlayer.sendChatMessage("/purchasepet " + nombreMascota);
 
-                            int intentos = 0;
-                            while (!guiReady.get() && intentos < 100) {
-                                Thread.sleep(100);
-                                intentos++;
-                            }
-
-                            Thread.sleep(3500);
-                        }
-                        Thread.sleep(1000);
+                        Thread.sleep(3500);
                     }
+
+                    Thread.sleep(1000);
                 }
             } catch (InterruptedException ignored) {}
         });
+
         feedThread.start();
     }
 
@@ -292,50 +273,11 @@ public class LooperMod {
             return "/feedpets";
         }
 
-
-
         @Override
         public void processCommand(ICommandSender sender, String[] args) throws CommandException {
             shouldFeed = true;
             cargarMascotas();
-
-            if (args.length == 1) {
-                try {
-                    modoFeed = Integer.parseInt(args[0]);
-                } catch (NumberFormatException e) {
-                    modoFeed = 1;
-                }
-            } else {
-                modoFeed = 1;
-            }
-
             alimentarMascotas();
-        }
-
-
-        @Override
-        public int getRequiredPermissionLevel() {
-            return 0;
-        }
-    }
-
-    public class CommandStopFeed extends CommandBase {
-        @Override
-        public String getCommandName() {
-            return "stopfeed";
-        }
-
-        @Override
-        public String getCommandUsage(ICommandSender sender) {
-            return "/stopfeed";
-        }
-
-        @Override
-        public void processCommand(ICommandSender sender, String[] args) throws CommandException {
-            if (feedThread != null && feedThread.isAlive()) {
-                feedThread.interrupt();
-                feedThread = null;
-            }
         }
 
         @Override
