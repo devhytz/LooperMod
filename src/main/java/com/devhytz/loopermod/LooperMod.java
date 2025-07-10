@@ -41,14 +41,16 @@ public class LooperMod {
 
     private void cargarMascotas() {
         mascotas.clear();
-        try (Reader reader = new InputStreamReader(
-                getClass().getClassLoader().getResourceAsStream("config/pets.json"),
-                StandardCharsets.UTF_8)) {
-            Gson gson = new Gson();
-            Type type = new TypeToken<Map<String, int[]>>() {}.getType();
-            Map<String, int[]> data = gson.fromJson(reader, type);
-            if (data != null) mascotas.putAll(data);
-        } catch (IOException | NullPointerException e) {
+
+        try {
+            File file = new File(Minecraft.getMinecraft().mcDataDir, "pets.json");
+            try (Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+                Gson gson = new Gson();
+                Type type = new TypeToken<Map<String, int[]>>() {}.getType();
+                Map<String, int[]> data = gson.fromJson(reader, type);
+                if (data != null) mascotas.putAll(data);
+            }
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
