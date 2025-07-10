@@ -172,18 +172,33 @@ public class LooperMod {
         });
     }
 
+    private void esperarConMovimiento(long millis) throws InterruptedException {
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < millis) {
+            if (!shouldFeed || Thread.currentThread().isInterrupted()) return;
+
+            mc.addScheduledTask(() -> {
+                if (mc.thePlayer != null && mc.theWorld != null) {
+                    mc.thePlayer.jump();
+                }
+            });
+
+            Thread.sleep(45000);
+        }
+    }
+
     private void ejecutarCicloInfinito() {
         feedThread = new Thread(() -> {
             try {
-                while (!Thread.currentThread().isInterrupted()) {
+                while (!Thread.currentThread().isInterrupted() && shouldFeed) {
                     alimentarMascotasSinThread();
                     Thread.sleep(1000);
                     ejecutarSecuenciaPostAlimentacion();
-                    Thread.sleep(30 * 60 * 1000);
+                    esperarConMovimiento(30 * 60 * 1000);
                     alimentarMascotasSinThread();
-                    Thread.sleep(10 * 60 * 1000);
+                    esperarConMovimiento(10 * 60 * 1000);
                     ejecutarSecuenciaPostAlimentacion();
-                    Thread.sleep(30 * 60 * 1000);
+                    esperarConMovimiento(30 * 60 * 1000);
                 }
             } catch (InterruptedException ignored) {}
         });
