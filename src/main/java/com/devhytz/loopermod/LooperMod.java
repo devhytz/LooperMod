@@ -41,18 +41,13 @@ public class LooperMod {
 
     private void cargarMascotas() {
         mascotas.clear();
-
         try (Reader reader = new InputStreamReader(
                 getClass().getClassLoader().getResourceAsStream("config/pets.json"),
                 StandardCharsets.UTF_8)) {
-
             Gson gson = new Gson();
             Type type = new TypeToken<Map<String, int[]>>() {}.getType();
             Map<String, int[]> data = gson.fromJson(reader, type);
-
-            if (data != null) {
-                mascotas.putAll(data);
-            }
+            if (data != null) mascotas.putAll(data);
         } catch (IOException | NullPointerException e) {
             e.printStackTrace();
         }
@@ -82,19 +77,19 @@ public class LooperMod {
 
                 new Thread(() -> {
                     try {
-                        Thread.sleep(400); // Reducido 250ms
+                        Thread.sleep(400); // Gui
                         mc.addScheduledTask(() -> {
                             mc.playerController.windowClick(
                                     chest.inventorySlots.windowId,
                                     slotToClick,
-                                    0, // clic izquierdo
+                                    0,
                                     0,
                                     mc.thePlayer
                             );
 
                             new Thread(() -> {
                                 try {
-                                    Thread.sleep(1050); // Reducido 250ms
+                                    Thread.sleep(1050); // Clicks
                                     mc.addScheduledTask(() -> mc.thePlayer.closeScreen());
                                 } catch (InterruptedException ignored) {}
                             }).start();
@@ -125,57 +120,49 @@ public class LooperMod {
         }
     }
 
-    private void alimentarMascotas() {
-        feedThread = new Thread(() -> {
-            try {
-                for (Map.Entry<String, int[]> entry : mascotas.entrySet()) {
+    private void alimentarMascotasSinThread() {
+        try {
+            for (Map.Entry<String, int[]> entry : mascotas.entrySet()) {
+                if (Thread.currentThread().isInterrupted()) return;
+
+                String nombreMascota = entry.getKey();
+                int[] slots = entry.getValue();
+
+                for (int slot : slots) {
                     if (Thread.currentThread().isInterrupted()) return;
 
-                    String nombreMascota = entry.getKey();
-                    int[] slots = entry.getValue();
+                    currentSlot = slot;
+                    guiReady.set(false);
+                    mc.thePlayer.sendChatMessage("/purchasepet " + nombreMascota);
 
-                    for (int slot : slots) {
-                        if (Thread.currentThread().isInterrupted()) return;
-
-                        currentSlot = slot;
-                        guiReady.set(false);
-                        mc.thePlayer.sendChatMessage("/purchasepet " + nombreMascota);
-
-                        int intentos = 0;
-                        while (!guiReady.get() && intentos < 100) {
-                            Thread.sleep(100);
-                            intentos++;
-                        }
-
-                        Thread.sleep(3300);
+                    int intentos = 0;
+                    while (!guiReady.get() && intentos < 100) {
+                        Thread.sleep(100);
+                        intentos++;
                     }
 
-                    Thread.sleep(1000);
+                    Thread.sleep(3300);
                 }
 
-                // Lógica después de alimentar
-                ejecutarSecuenciaPostAlimentacion();
-
-            } catch (InterruptedException ignored) {}
-        });
-
-        feedThread.start();
+                Thread.sleep(1000);
+            }
+        } catch (InterruptedException ignored) {}
     }
 
     private void ejecutarSecuenciaPostAlimentacion() {
         mc.addScheduledTask(() -> {
-            int cofreSlotHotbar = 4; // Ajusta según tu inventario
+            int cofreSlotHotbar = 4;
             mc.thePlayer.inventory.currentItem = cofreSlotHotbar;
             mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.getHeldItem());
 
             new Thread(() -> {
                 try {
-                    Thread.sleep(1000); // Espera para abrir la GUI del cofre
+                    Thread.sleep(1000);
 
                     mc.addScheduledTask(() -> mc.playerController.windowClick(
                             mc.thePlayer.openContainer.windowId,
                             9,
-                            0, // clic derecho
+                            0,
                             0,
                             mc.thePlayer
                     ));
@@ -185,16 +172,30 @@ public class LooperMod {
                     mc.addScheduledTask(() -> mc.playerController.windowClick(
                             mc.thePlayer.openContainer.windowId,
                             45,
-                            0, // clic derecho
+                            0,
                             0,
                             mc.thePlayer
                     ));
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                } catch (InterruptedException ignored) {}
             }).start();
         });
+    }
+
+    private void ejecutarCicloInfinito() {
+        feedThread = new Thread(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    alimentarMascotasSinThread();
+                    Thread.sleep(1000);
+                    ejecutarSecuenciaPostAlimentacion();
+                    Thread.sleep(1800000);
+                    alimentarMascotasSinThread();
+                    Thread.sleep(2400000);
+                }
+            } catch (InterruptedException ignored) {}
+        });
+
+        feedThread.start();
     }
 
     public class CommandFeedPets extends CommandBase {
@@ -212,7 +213,7 @@ public class LooperMod {
         public void processCommand(ICommandSender sender, String[] args) throws CommandException {
             shouldFeed = true;
             cargarMascotas();
-            alimentarMascotas();
+            ejecutarCicloInfinito();
         }
 
         @Override
