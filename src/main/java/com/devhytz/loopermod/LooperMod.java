@@ -6,7 +6,6 @@ import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -17,7 +16,6 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -41,7 +39,6 @@ public class LooperMod {
 
     private void cargarMascotas() {
         mascotas.clear();
-
         try {
             File file = new File(Minecraft.getMinecraft().mcDataDir, "pets.json");
             try (Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
@@ -79,7 +76,7 @@ public class LooperMod {
 
                 new Thread(() -> {
                     try {
-                        Thread.sleep(400); // Gui
+                        Thread.sleep(400);
                         mc.addScheduledTask(() -> {
                             mc.playerController.windowClick(
                                     chest.inventorySlots.windowId,
@@ -88,10 +85,9 @@ public class LooperMod {
                                     0,
                                     mc.thePlayer
                             );
-
                             new Thread(() -> {
                                 try {
-                                    Thread.sleep(1050); // Clicks
+                                    Thread.sleep(1050);
                                     mc.addScheduledTask(() -> mc.thePlayer.closeScreen());
                                 } catch (InterruptedException ignored) {}
                             }).start();
@@ -107,10 +103,8 @@ public class LooperMod {
         if (event.phase != TickEvent.Phase.END) return;
 
         boolean isSpacePressed = Keyboard.isKeyDown(Keyboard.KEY_SPACE);
-
         if (isSpacePressed && !spacePressedBefore) {
             spacePressedBefore = true;
-
             if (shouldFeed && feedThread != null && feedThread.isAlive()) {
                 feedThread.interrupt();
                 feedThread = null;
@@ -126,13 +120,10 @@ public class LooperMod {
         try {
             for (Map.Entry<String, int[]> entry : mascotas.entrySet()) {
                 if (Thread.currentThread().isInterrupted()) return;
-
                 String nombreMascota = entry.getKey();
                 int[] slots = entry.getValue();
-
                 for (int slot : slots) {
                     if (Thread.currentThread().isInterrupted()) return;
-
                     currentSlot = slot;
                     guiReady.set(false);
                     mc.thePlayer.sendChatMessage("/purchasepet " + nombreMascota);
@@ -142,10 +133,8 @@ public class LooperMod {
                         Thread.sleep(100);
                         intentos++;
                     }
-
                     Thread.sleep(3300);
                 }
-
                 Thread.sleep(1000);
             }
         } catch (InterruptedException ignored) {}
@@ -160,7 +149,6 @@ public class LooperMod {
             new Thread(() -> {
                 try {
                     Thread.sleep(1000);
-
                     mc.addScheduledTask(() -> mc.playerController.windowClick(
                             mc.thePlayer.openContainer.windowId,
                             9,
@@ -170,7 +158,6 @@ public class LooperMod {
                     ));
 
                     Thread.sleep(2000);
-
                     mc.addScheduledTask(() -> mc.playerController.windowClick(
                             mc.thePlayer.openContainer.windowId,
                             45,
@@ -190,9 +177,11 @@ public class LooperMod {
                     alimentarMascotasSinThread();
                     Thread.sleep(1000);
                     ejecutarSecuenciaPostAlimentacion();
-                    Thread.sleep(1800000);
+                    Thread.sleep(30 * 60 * 1000);
                     alimentarMascotasSinThread();
-                    Thread.sleep(2400000);
+                    Thread.sleep(10 * 60 * 1000);
+                    ejecutarSecuenciaPostAlimentacion();
+                    Thread.sleep(30 * 60 * 1000);
                 }
             } catch (InterruptedException ignored) {}
         });
