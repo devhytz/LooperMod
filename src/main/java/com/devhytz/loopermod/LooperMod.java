@@ -142,35 +142,35 @@ public class LooperMod {
         } catch (InterruptedException ignored) {}
     }
 
-    private void ejecutarSecuenciaPostAlimentacion() {
-        mc.addScheduledTask(() -> {
-            int cofreSlotHotbar = 4;
-            mc.thePlayer.inventory.currentItem = cofreSlotHotbar;
-            mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.getHeldItem());
+private void enviarMascotasAMision() {
+    mc.addScheduledTask(() -> {
+        int cofreSlotHotbar = 4;
+        mc.thePlayer.inventory.currentItem = cofreSlotHotbar;
+        mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.getHeldItem());
 
-            new Thread(() -> {
-                try {
-                    Thread.sleep(1000);
-                    mc.addScheduledTask(() -> mc.playerController.windowClick(
-                            mc.thePlayer.openContainer.windowId,
-                            9,
-                            0,
-                            0,
-                            mc.thePlayer
-                    ));
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000);
+                mc.addScheduledTask(() -> mc.playerController.windowClick(
+                        mc.thePlayer.openContainer.windowId,
+                        9,
+                        0,
+                        0,
+                        mc.thePlayer
+                ));
 
-                    Thread.sleep(2000);
-                    mc.addScheduledTask(() -> mc.playerController.windowClick(
-                            mc.thePlayer.openContainer.windowId,
-                            45,
-                            0,
-                            0,
-                            mc.thePlayer
-                    ));
-                } catch (InterruptedException ignored) {}
-            }).start();
-        });
-    }
+                Thread.sleep(2000);
+                mc.addScheduledTask(() -> mc.playerController.windowClick(
+                        mc.thePlayer.openContainer.windowId,
+                        45,
+                        0,
+                        0,
+                        mc.thePlayer
+                ));
+            } catch (InterruptedException ignored) {}
+        }).start();
+    });
+}
 
     private void esperarConMovimiento(long millis) throws InterruptedException {
         long startTime = System.currentTimeMillis();
@@ -191,13 +191,20 @@ public class LooperMod {
         feedThread = new Thread(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted() && shouldFeed) {
+                    // Paso 1: Alimentar todas las mascotas
                     alimentarMascotasSinThread();
                     Thread.sleep(1000);
-                    ejecutarSecuenciaPostAlimentacion();
+                    // Paso 2: Enviar a la misión
+                    enviarMascotasAMision();
+                    // Paso 3: Esperar 30 minutos
                     esperarConMovimiento(30 * 60 * 1000);
+                    // Paso 4: Volver a alimentar a todas las mascotas
                     alimentarMascotasSinThread();
+                    // Paso 5: Esperar 10 minutos
                     esperarConMovimiento(10 * 60 * 1000);
-                    ejecutarSecuenciaPostAlimentacion();
+                    // Paso 6: Volver a enviar a la misión
+                    enviarMascotasAMision();
+                    // Paso 7: Esperar 30 minutos
                     esperarConMovimiento(30 * 60 * 1000);
                 }
             } catch (InterruptedException ignored) {}
