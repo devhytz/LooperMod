@@ -25,6 +25,76 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.json.JSONObject;
+
+@Mod(modid = "loopermod", name = "LooperMod", version = "1.0")
+public class LooperMod {
+
+    private String apiKey = "";
+    private String uuid = "";
+
+    private void cargarConfig() {
+        try {
+            File file = new File("config.json");
+            try (Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
+                Gson gson = new Gson();
+                Map<String, String> data = gson.fromJson(reader, Map.class);
+                if (data != null) {
+                    apiKey = data.getOrDefault("apiKey", "");
+                    uuid = data.getOrDefault("uuid", "");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private long getPetJourneyTimestamp() {
+        if (apiKey.isEmpty() || uuid.isEmpty()) return -1;
+        try {
+            String urlStr = "https://api.hypixel.net/v2/player?key=" + apiKey + "&uuid=" + uuid;
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            int status = conn.getResponseCode();
+            if (status == 200) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder content = new StringBuilder();
+                String line;
+                while ((line = in.readLine()) != null) {
+                    content.append(line);
+                }
+                in.close();
+                JSONObject obj = new JSONObject(content.toString());
+                JSONObject player = obj.optJSONObject("player");
+                if (player != null && player.has("petJourneyTimestamp")) {
+                    return player.getLong("petJourneyTimestamp");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    private void esperarHastaProximaMision() throws InterruptedException {
+        long timestamp = getPetJourneyTimestamp();
+        if (timestamp == -1) {
+           
+            esperarConMovimiento(30 * 60 * 1000);
+            return;
+        }
+        long nextMission = (timestamp + 3600) * 1000L; 
+        long now = System.currentTimeMillis();
+        long waitMillis = nextMission - now;
+        if (waitMillis > 0) {
+            esperarConMovimiento(waitMillis);
+        }
+    }
 
 @Mod(modid = "loopermod", name = "LooperMod", version = "1.0")
 public class LooperMod {
@@ -190,22 +260,16 @@ private void enviarMascotasAMision() {
     private void ejecutarCicloInfinito() {
         feedThread = new Thread(() -> {
             try {
+                cargarConfig();
                 while (!Thread.currentThread().isInterrupted() && shouldFeed) {
-                    // Paso 1: Alimentar todas las mascotas
                     alimentarMascotasSinThread();
                     Thread.sleep(1000);
-                    // Paso 2: Enviar a la misión
                     enviarMascotasAMision();
-                    // Paso 3: Esperar 30 minutos
-                    esperarConMovimiento(30 * 60 * 1000);
-                    // Paso 4: Volver a alimentar a todas las mascotas
+                    esperarHastaProximaMision();
                     alimentarMascotasSinThread();
-                    // Paso 5: Esperar 10 minutos
                     esperarConMovimiento(10 * 60 * 1000);
-                    // Paso 6: Volver a enviar a la misión
                     enviarMascotasAMision();
-                    // Paso 7: Esperar 30 minutos
-                    esperarConMovimiento(30 * 60 * 1000);
+                    esperarHastaProximaMision();
                 }
             } catch (InterruptedException ignored) {}
         });
@@ -236,4 +300,5 @@ private void enviarMascotasAMision() {
             return 0;
         }
     }
+ }
 }
